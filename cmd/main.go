@@ -24,7 +24,11 @@ func main() {
 	api := router.Group("api")
 
 	// прописываем пути
-	api.POST("/note", svc.CreateNote)
+	api.GET("/notes", svc.CheckAuth(svc.GetNotes))
+	api.GET("/note/:id", svc.CheckAuth(svc.GetNoteById))
+	api.POST("/note", svc.CheckAuth(svc.CreateNote))
+	api.PUT("/note", svc.CheckAuth(svc.UpdateNoteById))
+	api.DELETE("/note", svc.CheckAuth(svc.DeleteNoteById))
 
 	api.POST("/register", svc.CreateUser)
 	api.POST("/auth", svc.AuthUser)
