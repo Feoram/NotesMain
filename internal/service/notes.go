@@ -2,11 +2,20 @@ package service
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
 )
 
 func (s *Service) CreateNote(c echo.Context) error {
+	note := new(Note)
+	err := c.Bind(&note)
+	fmt.Println(c.Request().Header)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InvalidParams))
+	}
+
 	resp, err := http.Get("https://favqs.com/api/qotd")
 	if err != nil {
 		s.logger.Error(err)
@@ -25,15 +34,8 @@ func (s *Service) CreateNote(c echo.Context) error {
 
 	quoteBody := jsonResponse.Quote.Body
 
-	note := new(Note)
-	err = c.Bind(&note)
-	if err != nil {
-		s.logger.Error(err)
-		return c.JSON(s.NewError(InvalidParams))
-	}
-
 	repo := s.notesRepo
-	body := quoteBody + " " + note.Body
+	body := fmt.Sprintf("%s %s", note.Body, quoteBody)
 	err = repo.CreateNewNote(note.Title, body)
 	if err != nil {
 		s.logger.Error(err)

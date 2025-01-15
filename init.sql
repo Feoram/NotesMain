@@ -1,7 +1,9 @@
 CREATE TABLE users (
                        id SERIAL PRIMARY KEY,
-                       email VARCHAR(255),
+                       name TEXT,
+                       email VARCHAR(255) UNIQUE ,
                        hashed_password TEXT,
+                       token TEXT,
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
 

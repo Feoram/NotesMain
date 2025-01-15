@@ -26,6 +26,9 @@ func main() {
 	// прописываем пути
 	api.POST("/note", svc.CreateNote)
 
+	api.POST("/register", svc.CreateUser)
+	api.POST("/auth", svc.AuthUser)
+
 	// запускаем сервер, чтобы слушал 8000 порт
 	router.Logger.Fatal(router.Start(":8000"))
 }

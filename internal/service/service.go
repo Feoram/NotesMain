@@ -2,6 +2,7 @@ package service
 
 import (
 	"Notes/internal/notes"
+	"Notes/internal/users"
 	"database/sql"
 
 	"github.com/labstack/echo/v4"
@@ -17,7 +18,8 @@ type Service struct {
 	db     *sql.DB
 	logger echo.Logger
 
-	notesRepo *notes.Repo
+	notesRepo        *notes.Repo
+	registerUserRepo *users.Repo
 }
 
 func NewService(db *sql.DB, logger echo.Logger) *Service {
@@ -32,6 +34,7 @@ func NewService(db *sql.DB, logger echo.Logger) *Service {
 
 func (s *Service) initRepositories(db *sql.DB) {
 	s.notesRepo = notes.NewRepo(db)
+	s.registerUserRepo = users.NewRepo(db)
 }
 
 // Пока можно не вдаваться в то что ниже
