@@ -1,5 +1,5 @@
 CREATE TABLE users (
-                       id SERIAL PRIMARY KEY,
+                       id VARCHAR PRIMARY KEY,
                        name TEXT,
                        email VARCHAR(255) UNIQUE ,
                        hashed_password TEXT,
@@ -9,7 +9,7 @@ CREATE TABLE users (
 
 CREATE TABLE note (
                        id SERIAL PRIMARY KEY,
-                       user_id INT REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
+                       user_id VARCHAR REFERENCES users(id) ON DELETE CASCADE ON UPDATE CASCADE,
                        title VARCHAR(50),
                        body TEXT,
                        created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP

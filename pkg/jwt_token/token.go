@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-func CreateToken(id int, name, key string) (string, error) {
+func CreateToken(id, name, key string) (string, error) {
 	if len(key) == 0 {
 		return "", errors.New("JWT_SECRET_KEY is not set")
 	}
@@ -18,7 +18,7 @@ func CreateToken(id int, name, key string) (string, error) {
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, payload)
 
-	t, err := token.SignedString(key)
+	t, err := token.SignedString([]byte(key))
 	if err != nil {
 		return "", errors.New("ошибка создания JWT токена")
 	}
@@ -41,8 +41,6 @@ func DecodeJWT(tokenString string, secretKey []byte) (jwt.MapClaims, error) {
 
 	// Извлекаем claims из токена
 	claims, ok := token.Claims.(jwt.MapClaims)
-	fmt.Println(claims["name"])
-	fmt.Println(claims["iat"])
 	if !ok {
 		return nil, fmt.Errorf("не удалось преобразовать claims")
 	}

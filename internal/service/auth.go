@@ -6,6 +6,8 @@ import (
 	"github.com/labstack/echo/v4"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strconv"
+	"time"
 )
 
 const secretKey = "khetag_pig"
@@ -22,19 +24,23 @@ func (s *Service) CreateUser(c echo.Context) error {
 		return c.JSON(http.StatusBadRequest, "Все поля обязательны для заполнения")
 	}
 
+	id := strconv.FormatInt(time.Now().UnixNano(), 10)
+
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newUser.Password), 14)
 	if err != nil {
 		s.logger.Error("Ошибка хеширования пароля:", err)
 		return c.JSON(http.StatusInternalServerError, "Ошибка при обработке пароля")
 	}
 
-	token, err := jwt_token.CreateToken(newUser.Id, newUser.Name, secretKey)
+	fmt.Println(id, "ИД пользователя")
+	token, err := jwt_token.CreateToken(id, newUser.Name, secretKey)
 	if err != nil {
-		return err
+		s.logger.Error(err)
+		return c.JSON(http.StatusBadRequest, "Некорректные данные")
 	}
 
 	repo := s.registerUserRepo
-	err = repo.CreateNewUser(newUser.Name, newUser.Email, string(hashedPassword), token)
+	err = repo.CreateNewUser(id, newUser.Name, newUser.Email, string(hashedPassword), token)
 	if err != nil {
 		s.logger.Error("Ошибка сохранения пользователя:", err)
 		return c.JSON(http.StatusConflict, "Пользователь уже существует")
@@ -58,7 +64,7 @@ func (s *Service) AuthUser(c echo.Context) error {
 	}
 
 	repo := s.registerUserRepo
-	err = repo.VerifyingUserData(user.Email, string(hashedPassword), user.Email)
+	err = repo.VerifyingUserData(user.Email, string(hashedPassword))
 	if err != nil {
 		s.logger.Error("Ошибка введённых данных:", err)
 		return c.JSON(http.StatusConflict, "Неверный пароль или email")
@@ -67,7 +73,7 @@ func (s *Service) AuthUser(c echo.Context) error {
 	return c.JSON(http.StatusOK, "Вы успешно авторизированны")
 }
 
-func (s *Service) CheckAuth(apiFunc func(c echo.Context, userId int) error) echo.HandlerFunc {
+func (s *Service) CheckAuth(apiFunc func(c echo.Context, userId string) error) echo.HandlerFunc {
 	return func(c echo.Context) error {
 		token := c.Request().Header.Get("Authorization")
 		fmt.Println(token)
@@ -76,11 +82,12 @@ func (s *Service) CheckAuth(apiFunc func(c echo.Context, userId int) error) echo
 		}
 
 		jwt, err := jwt_token.DecodeJWT(token, []byte(secretKey))
-		fmt.Println(jwt)
+		fmt.Println(jwt["sub"])
 		if err != nil {
-			return err
+			fmt.Println(err)
+			return c.JSON(http.StatusInternalServerError, "Не удалось декодировать токен")
 		}
 
-		return apiFunc(c, userId)
+		return apiFunc(c, jwt["sub"].(string))
 	}
 }

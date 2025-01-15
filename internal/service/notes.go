@@ -5,12 +5,13 @@ import (
 	"fmt"
 	"github.com/labstack/echo/v4"
 	"net/http"
+	"strconv"
 )
 
-func (s *Service) CreateNote(c echo.Context) error {
+// CreateNote - создание заметки
+func (s *Service) CreateNote(c echo.Context, userId string) error {
 	note := new(Note)
 	err := c.Bind(&note)
-	fmt.Println(c.Request().Header)
 	if err != nil {
 		s.logger.Error(err)
 		return c.JSON(s.NewError(InvalidParams))
@@ -36,7 +37,80 @@ func (s *Service) CreateNote(c echo.Context) error {
 
 	repo := s.notesRepo
 	body := fmt.Sprintf("%s %s", note.Body, quoteBody)
-	err = repo.CreateNewNote(note.Title, body)
+	err = repo.CreateNewNote(note.Title, body, userId)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InternalServerError))
+	}
+
+	return c.JSON(http.StatusOK, "OK")
+}
+
+// GetNotes - все запросы
+func (s *Service) GetNotes(c echo.Context, userId string) error {
+	repo := s.notesRepo
+	words, err := repo.GetAllNotes(userId, 0)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InternalServerError))
+	}
+
+	return c.JSON(http.StatusOK, words)
+}
+
+// GetNoteById - Достать заметку по id
+func (s *Service) GetNoteById(c echo.Context, userId string) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InvalidParams))
+	}
+
+	repo := s.notesRepo
+	words, err := repo.GetAllNotes(userId, id)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InternalServerError))
+	}
+
+	return c.JSON(http.StatusOK, words)
+}
+
+// DeleteNoteById - удаление заметки
+func (s *Service) DeleteNoteById(c echo.Context, userId string) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InvalidParams))
+	}
+
+	repo := s.notesRepo
+	err = repo.DeleteNote(id, userId)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InternalServerError))
+	}
+
+	return c.JSON(http.StatusOK, "OK")
+}
+
+// UpdateNoteById - изменение заметки
+func (s *Service) UpdateNoteById(c echo.Context, userId string) error {
+	id, err := strconv.Atoi(c.Param("id"))
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InvalidParams))
+	}
+
+	note := new(Note)
+	err = c.Bind(&note)
+	if err != nil {
+		s.logger.Error(err)
+		return c.JSON(s.NewError(InvalidParams))
+	}
+
+	repo := s.notesRepo
+	err = repo.UpdateNote(id, userId, note.Title, note.Body)
 	if err != nil {
 		s.logger.Error(err)
 		return c.JSON(s.NewError(InternalServerError))

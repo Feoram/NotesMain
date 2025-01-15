@@ -13,8 +13,8 @@ func NewRepo(db *sql.DB) *Repo {
 	return &Repo{db: db}
 }
 
-func (r *Repo) CreateNewUser(name, email, password, token string) error {
-	_, err := r.db.Exec(`INSERT INTO users (name, email, hashed_password, created_at, token) VALUES ($1, $2, $3, $4, $5)`, name, email, password, time.Now(), token)
+func (r *Repo) CreateNewUser(id, name, email, password, token string) error {
+	_, err := r.db.Exec(`INSERT INTO users (id, name, email, hashed_password, created_at, token) VALUES ($1, $2, $3, $4, $5, $6)`, id, name, email, password, time.Now(), token)
 	if err != nil {
 		return err
 	}
@@ -22,7 +22,7 @@ func (r *Repo) CreateNewUser(name, email, password, token string) error {
 	return nil
 }
 
-func (r *Repo) VerifyingUserData(email, password, token string) error {
+func (r *Repo) VerifyingUserData(email, password string) error {
 	_, err := r.db.Exec(`SELECT EXISTS (
     SELECT 1
     FROM users
